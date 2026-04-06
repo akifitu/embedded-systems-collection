@@ -24,6 +24,7 @@ problems that show up in production teams.
 - Thermal-process control through a reflow oven profile controller
 - USB-C power negotiation and safe fallback through a USB PD sink controller
 - Motion control through a stepper homing and trapezoidal trajectory planner
+- Motor-drive startup logic through a sensorless BLDC commutation controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -43,6 +44,7 @@ flowchart LR
     Host --> RO[Reflow Oven Controller]
     Host --> PD[USB PD Sink Controller]
     Host --> SMP[Stepper Motion Planner]
+    Host --> BLDC[Sensorless BLDC Startup]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -56,6 +58,7 @@ flowchart LR
     RO --> Thermal[PID Heat Control and Reflow Safety]
     PD --> Negotiation[PDO Selection and Fault Fallback]
     SMP --> Motion[Homing, Limits, and Trapezoidal Moves]
+    BLDC --> Drive[Six-Step Startup and BEMF Lock]
 ```
 
 ## Projects
@@ -75,6 +78,7 @@ flowchart LR
 | `reflow-oven-controller` | Reflow profile tracking, PID heater control, safety interlocks | `make run-reflow` | [Architecture](projects/reflow-oven-controller/docs/ARCHITECTURE.md) |
 | `usb-pd-sink-controller` | USB PD PDO selection, derating, retries, brownout fallback | `make run-pd` | [Architecture](projects/usb-pd-sink-controller/docs/ARCHITECTURE.md) |
 | `stepper-motion-planner` | Homing, trapezoidal move planning, limit and stall faults | `make run-stepper` | [Architecture](projects/stepper-motion-planner/docs/ARCHITECTURE.md) |
+| `sensorless-bldc-startup` | Six-step commutation, open-loop ramp, back-EMF lock and faults | `make run-bldc` | [Architecture](projects/sensorless-bldc-startup/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -211,6 +215,17 @@ phase=limit_abort state=FAULT pos=15014 target=16000 rate=0 dir=STOP progress=75
 phase=rehome_complete state=READY pos=0 target=0 rate=0 dir=STOP progress=100 faults=none
 ```
 
+### Sensorless BLDC Startup
+
+```text
+phase=align state=ALIGN sector=S1 duty=18 period=0us rpm=0 lock=SEEKING faults=none
+phase=ramp state=OPEN_LOOP sector=S3 duty=26 period=2400us rpm=625 lock=SEEKING faults=none
+phase=lock state=CLOSED_LOOP sector=S6 duty=34 period=806us rpm=1860 lock=LOCKED faults=none
+phase=load_step state=CLOSED_LOOP sector=S1 duty=46 period=1063us rpm=1410 lock=LOCKED faults=none
+phase=overcurrent state=FAULT sector=S6 duty=0 period=0us rpm=0 lock=LOST faults=overcurrent
+phase=no_lock state=FAULT sector=S6 duty=0 period=0us rpm=0 lock=LOST faults=no_lock
+```
+
 ## Build
 
 Build and test everything:
@@ -236,6 +251,7 @@ make run-imu
 make run-reflow
 make run-pd
 make run-stepper
+make run-bldc
 ```
 
 ## Why This Set Works on GitHub
@@ -259,6 +275,7 @@ make run-stepper
 - Port the reflow controller to an STM32, MAX31855 thermocouple frontend, and SSR output stage
 - Port the USB PD sink controller to an STM32, FUSB302 or STUSB4500, and real power-path telemetry
 - Port the stepper planner to an STM32 or RP2040 with TMC2209/A4988 drivers and real limit switches
+- Port the BLDC startup controller to an STM32 with timer PWM, comparator-based zero-cross sensing, and gate drivers
 
 ## References
 

@@ -13,6 +13,7 @@
 - Add an eleventh thermal-control project with reflow profile tracking and oven safety
 - Add a twelfth USB-C power-negotiation project with sink policy control
 - Add a thirteenth motion-control project with homing and trapezoidal planning
+- Add a fourteenth motor-drive project with sensorless BLDC startup and lock detection
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 

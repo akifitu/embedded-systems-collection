@@ -11,9 +11,10 @@ PROJECTS := \
 	projects/imu-attitude-estimator \
 	projects/reflow-oven-controller \
 	projects/usb-pd-sink-controller \
-	projects/stepper-motion-planner
+	projects/stepper-motion-planner \
+	projects/sensorless-bldc-startup
 
-.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper
+.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc
 
 all:
 	@for project in $(PROJECTS); do $(MAKE) -C $$project all; done
@@ -62,3 +63,6 @@ run-pd:
 
 run-stepper:
 	@$(MAKE) -C projects/stepper-motion-planner run
+
+run-bldc:
+	@$(MAKE) -C projects/sensorless-bldc-startup run
