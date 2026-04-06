@@ -8,9 +8,10 @@ PROJECTS := \
 	projects/modbus-rtu-field-node \
 	projects/secure-attestation-node \
 	projects/rtos-scheduler-lab \
-	projects/imu-attitude-estimator
+	projects/imu-attitude-estimator \
+	projects/reflow-oven-controller
 
-.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu
+.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow
 
 all:
 	@for project in $(PROJECTS); do $(MAKE) -C $$project all; done
@@ -50,3 +51,6 @@ run-rtos:
 
 run-imu:
 	@$(MAKE) -C projects/imu-attitude-estimator run
+
+run-reflow:
+	@$(MAKE) -C projects/reflow-oven-controller run

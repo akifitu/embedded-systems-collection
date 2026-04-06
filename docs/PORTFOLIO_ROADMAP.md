@@ -10,6 +10,7 @@
 - Add an eighth security-oriented project with firmware measurement and attestation
 - Add a ninth real-time scheduling project with deadline and watchdog behavior
 - Add a tenth sensor-fusion project with IMU attitude estimation
+- Add an eleventh thermal-control project with reflow profile tracking and oven safety
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 

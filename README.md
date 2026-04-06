@@ -21,6 +21,7 @@ problems that show up in production teams.
 - Firmware measurement and device identity proof through a secure attestation node
 - Fixed-priority real-time scheduling through an RTOS scheduler laboratory
 - IMU sensor fusion and motion-state estimation through an attitude estimator
+- Thermal-process control through a reflow oven profile controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -37,6 +38,7 @@ flowchart LR
     Host --> SAN[Secure Attestation Node]
     Host --> RTOS[RTOS Scheduler Lab]
     Host --> IMU[IMU Attitude Estimator]
+    Host --> RO[Reflow Oven Controller]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -47,6 +49,7 @@ flowchart LR
     SAN --> Trust[Measurement Check and HMAC Token]
     RTOS --> Timing[Priority Scheduling and Watchdog]
     IMU --> Fusion[Complementary Filter and Motion State]
+    RO --> Thermal[PID Heat Control and Reflow Safety]
 ```
 
 ## Projects
@@ -63,6 +66,7 @@ flowchart LR
 | `secure-attestation-node` | SHA-256 measurement, HMAC challenge-response, replay guard | `make run-attest` | [Architecture](projects/secure-attestation-node/docs/ARCHITECTURE.md) |
 | `rtos-scheduler-lab` | Fixed-priority scheduling, deadline miss, watchdog | `make run-rtos` | [Architecture](projects/rtos-scheduler-lab/docs/ARCHITECTURE.md) |
 | `imu-attitude-estimator` | Complementary filter, tilt estimation, motion states | `make run-imu` | [Architecture](projects/imu-attitude-estimator/docs/ARCHITECTURE.md) |
+| `reflow-oven-controller` | Reflow profile tracking, PID heater control, safety interlocks | `make run-reflow` | [Architecture](projects/reflow-oven-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -166,6 +170,17 @@ phase=freefall roll=2.8 pitch=2.4 accel_norm=0.09 state=FREEFALL confidence=10
 phase=recovery roll=0.6 pitch=4.0 accel_norm=1.00 state=TRACKING confidence=96
 ```
 
+### Reflow Oven Controller
+
+```text
+phase=preheat stage=PREHEAT target=150.0 temp=110.5 heater=100 fan=0 progress=7 faults=none
+phase=soak stage=SOAK target=180.0 temp=175.7 heater=81 fan=0 progress=42 faults=none
+phase=reflow stage=REFLOW target=235.0 temp=181.5 heater=100 fan=0 progress=65 faults=none
+phase=cooldown stage=COOL target=90.0 temp=148.4 heater=0 fan=100 progress=90 faults=none
+phase=complete stage=COMPLETE target=40.0 temp=79.8 heater=0 fan=25 progress=100 faults=none
+phase=sensor_fault stage=FAULT target=0.0 temp=178.0 heater=0 fan=100 progress=0 faults=sensor_open
+```
+
 ## Build
 
 Build and test everything:
@@ -188,6 +203,7 @@ make run-modbus
 make run-attest
 make run-rtos
 make run-imu
+make run-reflow
 ```
 
 ## Why This Set Works on GitHub
@@ -208,6 +224,7 @@ make run-imu
 - Port the secure attestation node to a secure element or TrustZone-backed key store
 - Port the RTOS lab to FreeRTOS or Zephyr task traces on real hardware
 - Port the IMU estimator to an MPU6050 or BMI270 SPI/I2C driver stack
+- Port the reflow controller to an STM32, MAX31855 thermocouple frontend, and SSR output stage
 
 ## References
 
