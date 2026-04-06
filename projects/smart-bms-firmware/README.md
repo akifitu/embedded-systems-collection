@@ -28,6 +28,10 @@ step=1 state=CHARGING soc=72.02 charge=1 discharge=0 faults=none balancing=[0 0 
 step=4 state=FAULT soc=72.00 charge=0 discharge=0 faults= overtemp balancing=[0 0 0 0]
 ```
 
+## Hardware Port Track
+
+- [STM32F446 Port Scaffold](ports/stm32f446/README.md)
+
 ## Future Extensions
 
 - ADC calibration and hardware abstraction layer
