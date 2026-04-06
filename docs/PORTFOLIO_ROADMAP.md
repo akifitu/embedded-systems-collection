@@ -16,6 +16,7 @@
 - Add a fourteenth motor-drive project with sensorless BLDC startup and lock detection
 - Add a fifteenth board-bringup project with multi-rail sequencing and power-good supervision
 - Add a sixteenth boot-security project with manifest verification and recovery fallback
+- Add a seventeenth automotive-diagnostics project with UDS session and security handling
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 

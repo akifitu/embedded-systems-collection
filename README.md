@@ -27,6 +27,7 @@ problems that show up in production teams.
 - Motor-drive startup logic through a sensorless BLDC commutation controller
 - Board bring-up and rail supervision through a multi-rail power sequencer
 - Boot-chain security through a secure boot manifest verifier
+- Automotive diagnostics through a UDS session and security-access node
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -49,6 +50,7 @@ flowchart LR
     Host --> BLDC[Sensorless BLDC Startup]
     Host --> PSEQ[Multi-Rail Power Sequencer]
     Host --> SBV[Secure Boot Manifest Verifier]
+    Host --> UDS[UDS Diagnostic Node]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -65,6 +67,7 @@ flowchart LR
     BLDC --> Drive[Six-Step Startup and BEMF Lock]
     PSEQ --> BoardPower[Rail Order, PG Supervision, and Retry]
     SBV --> Chain[Image Hash, HMAC, and Anti-Rollback]
+    UDS --> Diag[Sessions, DID Reads, DTCs, and NRC Handling]
 ```
 
 ## Projects
@@ -87,6 +90,7 @@ flowchart LR
 | `sensorless-bldc-startup` | Six-step commutation, open-loop ramp, back-EMF lock and faults | `make run-bldc` | [Architecture](projects/sensorless-bldc-startup/docs/ARCHITECTURE.md) |
 | `multi-rail-power-sequencer` | Rail ordering, power-good supervision, retries, brownout faults | `make run-sequencer` | [Architecture](projects/multi-rail-power-sequencer/docs/ARCHITECTURE.md) |
 | `secure-boot-manifest-verifier` | Image hash, HMAC auth, anti-rollback, recovery fallback | `make run-sboot` | [Architecture](projects/secure-boot-manifest-verifier/docs/ARCHITECTURE.md) |
+| `uds-diagnostic-node` | Session control, security access, DID reads, DTC services | `make run-uds` | [Architecture](projects/uds-diagnostic-node/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -257,6 +261,18 @@ phase=recovery_only slot=RECOVERY verdict=RECOVERY counter=11 abi=3 product=0x42
 phase=hard_fail slot=NONE verdict=REJECT counter=8 abi=3 product=0x42 reason=AUTH_FAILED
 ```
 
+### UDS Diagnostic Node
+
+```text
+phase=session req=10 03 rsp=50 03 session=EXTENDED security=LOCKED dtc=2
+phase=vin req=22 F1 90 rsp=62 F1 90 41 4B 49 46 49 52 4D 57 session=EXTENDED security=LOCKED dtc=2
+phase=seed req=27 01 rsp=67 01 3A C5 session=EXTENDED security=SEED_ISSUED dtc=2
+phase=unlock req=27 02 96 68 rsp=67 02 session=EXTENDED security=UNLOCKED dtc=2
+phase=dtc req=19 02 rsp=59 02 02 10 11 01 C2 22 02 session=EXTENDED security=UNLOCKED dtc=2
+phase=clear req=14 FF FF FF rsp=54 session=EXTENDED security=UNLOCKED dtc=0
+phase=bad_key req=27 02 00 00 rsp=7F 27 35 session=EXTENDED security=LOCKED dtc=2
+```
+
 ## Build
 
 Build and test everything:
@@ -285,6 +301,7 @@ make run-stepper
 make run-bldc
 make run-sequencer
 make run-sboot
+make run-uds
 ```
 
 ## Why This Set Works on GitHub
@@ -311,6 +328,7 @@ make run-sboot
 - Port the BLDC startup controller to an STM32 with timer PWM, comparator-based zero-cross sensing, and gate drivers
 - Port the power sequencer to an STM32 supervisor MCU with PG GPIOs, PMIC enables, and brownout ADC monitoring
 - Port the secure boot verifier to MCUboot-style ROM or first-stage bootloader firmware with OTP-backed counters
+- Port the UDS node to CAN ISO-TP on STM32 or an automotive MCU with real DID and DTC storage
 
 ## References
 

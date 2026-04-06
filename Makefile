@@ -14,9 +14,10 @@ PROJECTS := \
 	projects/stepper-motion-planner \
 	projects/sensorless-bldc-startup \
 	projects/multi-rail-power-sequencer \
-	projects/secure-boot-manifest-verifier
+	projects/secure-boot-manifest-verifier \
+	projects/uds-diagnostic-node
 
-.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer run-sboot
+.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer run-sboot run-uds
 
 all:
 	@for project in $(PROJECTS); do $(MAKE) -C $$project all; done
@@ -74,3 +75,6 @@ run-sequencer:
 
 run-sboot:
 	@$(MAKE) -C projects/secure-boot-manifest-verifier run
+
+run-uds:
+	@$(MAKE) -C projects/uds-diagnostic-node run
