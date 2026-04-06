@@ -19,6 +19,7 @@ problems that show up in production teams.
 - Low-power duty cycling and energy budgeting through a harvesting node controller
 - Industrial protocol handling through a Modbus RTU field device
 - Firmware measurement and device identity proof through a secure attestation node
+- Fixed-priority real-time scheduling through an RTOS scheduler laboratory
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -33,6 +34,7 @@ flowchart LR
     Host --> EHN[Energy Harvesting Node]
     Host --> MB[Modbus RTU Field Node]
     Host --> SAN[Secure Attestation Node]
+    Host --> RTOS[RTOS Scheduler Lab]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -41,6 +43,7 @@ flowchart LR
     EHN --> Power[Task Selection and Deep Sleep]
     MB --> Industrial[Register Map and Exception Frames]
     SAN --> Trust[Measurement Check and HMAC Token]
+    RTOS --> Timing[Priority Scheduling and Watchdog]
 ```
 
 ## Projects
@@ -55,6 +58,7 @@ flowchart LR
 | `energy-harvesting-node` | Energy budget, task gating, brownout-safe duty cycling | `make run-power` | [Architecture](projects/energy-harvesting-node/docs/ARCHITECTURE.md) |
 | `modbus-rtu-field-node` | Register map, CRC, Modbus function handling | `make run-modbus` | [Architecture](projects/modbus-rtu-field-node/docs/ARCHITECTURE.md) |
 | `secure-attestation-node` | SHA-256 measurement, HMAC challenge-response, replay guard | `make run-attest` | [Architecture](projects/secure-attestation-node/docs/ARCHITECTURE.md) |
+| `rtos-scheduler-lab` | Fixed-priority scheduling, deadline miss, watchdog | `make run-rtos` | [Architecture](projects/rtos-scheduler-lab/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -139,6 +143,15 @@ phase=trusted_update boot=YES status=OK counter=42 token=4fc3bda9798b53048f171e8
 phase=tampered boot=NO status=MEASUREMENT_MISMATCH counter=42 token=BLOCKED
 ```
 
+### RTOS Scheduler Lab
+
+```text
+phase=nominal idle=25 misses=0 watchdog=OK starved=none last=control
+phase=radio_burst idle=10 misses=0 watchdog=OK starved=none last=control
+phase=sensor_stall idle=0 misses=14 watchdog=TRIPPED starved=control last=sensor
+phase=recovery idle=22 misses=0 watchdog=OK starved=none last=control
+```
+
 ## Build
 
 Build and test everything:
@@ -159,6 +172,7 @@ make run-journal
 make run-power
 make run-modbus
 make run-attest
+make run-rtos
 ```
 
 ## Why This Set Works on GitHub
@@ -177,6 +191,7 @@ make run-attest
 - Port the harvesting node to a solar charger + ADC coulomb counter board
 - Port the Modbus field node to RS-485 transceivers with UART DMA
 - Port the secure attestation node to a secure element or TrustZone-backed key store
+- Port the RTOS lab to FreeRTOS or Zephyr task traces on real hardware
 
 ## References
 

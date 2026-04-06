@@ -8,6 +8,7 @@
 - Add a sixth low-power project for energy-aware duty cycling
 - Add a seventh industrial protocol project with RTU framing and register maps
 - Add an eighth security-oriented project with firmware measurement and attestation
+- Add a ninth real-time scheduling project with deadline and watchdog behavior
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 
