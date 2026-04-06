@@ -15,6 +15,7 @@
 - Add a thirteenth motion-control project with homing and trapezoidal planning
 - Add a fourteenth motor-drive project with sensorless BLDC startup and lock detection
 - Add a fifteenth board-bringup project with multi-rail sequencing and power-good supervision
+- Add a sixteenth boot-security project with manifest verification and recovery fallback
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 

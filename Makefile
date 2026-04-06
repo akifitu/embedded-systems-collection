@@ -13,9 +13,10 @@ PROJECTS := \
 	projects/usb-pd-sink-controller \
 	projects/stepper-motion-planner \
 	projects/sensorless-bldc-startup \
-	projects/multi-rail-power-sequencer
+	projects/multi-rail-power-sequencer \
+	projects/secure-boot-manifest-verifier
 
-.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer
+.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer run-sboot
 
 all:
 	@for project in $(PROJECTS); do $(MAKE) -C $$project all; done
@@ -70,3 +71,6 @@ run-bldc:
 
 run-sequencer:
 	@$(MAKE) -C projects/multi-rail-power-sequencer run
+
+run-sboot:
+	@$(MAKE) -C projects/secure-boot-manifest-verifier run
