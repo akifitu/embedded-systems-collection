@@ -28,6 +28,7 @@ problems that show up in production teams.
 - Board bring-up and rail supervision through a multi-rail power sequencer
 - Boot-chain security through a secure boot manifest verifier
 - Automotive diagnostics through a UDS session and security-access node
+- HMI sensing through a capacitive touch keypad controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -51,6 +52,7 @@ flowchart LR
     Host --> PSEQ[Multi-Rail Power Sequencer]
     Host --> SBV[Secure Boot Manifest Verifier]
     Host --> UDS[UDS Diagnostic Node]
+    Host --> TOUCH[Capacitive Touch Keypad]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -68,6 +70,7 @@ flowchart LR
     PSEQ --> BoardPower[Rail Order, PG Supervision, and Retry]
     SBV --> Chain[Image Hash, HMAC, and Anti-Rollback]
     UDS --> Diag[Sessions, DID Reads, DTCs, and NRC Handling]
+    TOUCH --> HMI[Baseline Tracking, Debounce, and Moisture Guard]
 ```
 
 ## Projects
@@ -91,6 +94,7 @@ flowchart LR
 | `multi-rail-power-sequencer` | Rail ordering, power-good supervision, retries, brownout faults | `make run-sequencer` | [Architecture](projects/multi-rail-power-sequencer/docs/ARCHITECTURE.md) |
 | `secure-boot-manifest-verifier` | Image hash, HMAC auth, anti-rollback, recovery fallback | `make run-sboot` | [Architecture](projects/secure-boot-manifest-verifier/docs/ARCHITECTURE.md) |
 | `uds-diagnostic-node` | Session control, security access, DID reads, DTC services | `make run-uds` | [Architecture](projects/uds-diagnostic-node/docs/ARCHITECTURE.md) |
+| `capacitive-touch-keypad-controller` | Baseline tracking, debounce, hold/combo events, moisture rejection | `make run-touch` | [Architecture](projects/capacitive-touch-keypad-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -273,6 +277,17 @@ phase=clear req=14 FF FF FF rsp=54 session=EXTENDED security=UNLOCKED dtc=0
 phase=bad_key req=27 02 00 00 rsp=7F 27 35 session=EXTENDED security=LOCKED dtc=2
 ```
 
+### Capacitive Touch Keypad Controller
+
+```text
+phase=idle active=NONE event=NONE moisture=DRY faults=none baselines=1000/1004/998/1002
+phase=tap_ok active=NONE event=TAP_OK moisture=DRY faults=none baselines=1000/1004/998/1002
+phase=hold_back active=BACK event=HOLD_BACK moisture=DRY faults=none baselines=1000/1004/998/1002
+phase=combo active=NONE event=COMBO_UP_OK moisture=DRY faults=none baselines=1000/1004/998/1002
+phase=moisture active=NONE event=NONE moisture=WET faults=moisture baselines=1000/1004/998/1002
+phase=recovery active=NONE event=TAP_DOWN moisture=DRY faults=none baselines=1000/1004/998/1002
+```
+
 ## Build
 
 Build and test everything:
@@ -302,6 +317,7 @@ make run-bldc
 make run-sequencer
 make run-sboot
 make run-uds
+make run-touch
 ```
 
 ## Why This Set Works on GitHub
@@ -329,6 +345,7 @@ make run-uds
 - Port the power sequencer to an STM32 supervisor MCU with PG GPIOs, PMIC enables, and brownout ADC monitoring
 - Port the secure boot verifier to MCUboot-style ROM or first-stage bootloader firmware with OTP-backed counters
 - Port the UDS node to CAN ISO-TP on STM32 or an automotive MCU with real DID and DTC storage
+- Port the touch keypad to STM32 TSC, Microchip PTC, or ESP32 touch peripherals with real electrode layouts
 
 ## References
 

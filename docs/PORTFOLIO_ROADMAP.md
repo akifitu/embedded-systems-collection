@@ -17,6 +17,7 @@
 - Add a fifteenth board-bringup project with multi-rail sequencing and power-good supervision
 - Add a sixteenth boot-security project with manifest verification and recovery fallback
 - Add a seventeenth automotive-diagnostics project with UDS session and security handling
+- Add an eighteenth HMI project with capacitive touch filtering and moisture rejection
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 
