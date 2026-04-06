@@ -22,6 +22,7 @@ problems that show up in production teams.
 - Fixed-priority real-time scheduling through an RTOS scheduler laboratory
 - IMU sensor fusion and motion-state estimation through an attitude estimator
 - Thermal-process control through a reflow oven profile controller
+- USB-C power negotiation and safe fallback through a USB PD sink controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -39,6 +40,7 @@ flowchart LR
     Host --> RTOS[RTOS Scheduler Lab]
     Host --> IMU[IMU Attitude Estimator]
     Host --> RO[Reflow Oven Controller]
+    Host --> PD[USB PD Sink Controller]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -50,6 +52,7 @@ flowchart LR
     RTOS --> Timing[Priority Scheduling and Watchdog]
     IMU --> Fusion[Complementary Filter and Motion State]
     RO --> Thermal[PID Heat Control and Reflow Safety]
+    PD --> Negotiation[PDO Selection and Fault Fallback]
 ```
 
 ## Projects
@@ -67,6 +70,7 @@ flowchart LR
 | `rtos-scheduler-lab` | Fixed-priority scheduling, deadline miss, watchdog | `make run-rtos` | [Architecture](projects/rtos-scheduler-lab/docs/ARCHITECTURE.md) |
 | `imu-attitude-estimator` | Complementary filter, tilt estimation, motion states | `make run-imu` | [Architecture](projects/imu-attitude-estimator/docs/ARCHITECTURE.md) |
 | `reflow-oven-controller` | Reflow profile tracking, PID heater control, safety interlocks | `make run-reflow` | [Architecture](projects/reflow-oven-controller/docs/ARCHITECTURE.md) |
+| `usb-pd-sink-controller` | USB PD PDO selection, derating, retries, brownout fallback | `make run-pd` | [Architecture](projects/usb-pd-sink-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -181,6 +185,17 @@ phase=complete stage=COMPLETE target=40.0 temp=79.8 heater=0 fan=25 progress=100
 phase=sensor_fault stage=FAULT target=0.0 temp=178.0 heater=0 fan=100 progress=0 faults=sensor_open
 ```
 
+### USB PD Sink Controller
+
+```text
+phase=attach_request state=REQUESTING req=20.0V/1.90A active=none power=38.0W retries=0 faults=none
+phase=ready state=READY req=20.0V/1.90A active=20.0V/1.90A power=38.0W retries=0 faults=none
+phase=thermal_derate state=DERATED req=9.0V/2.00A active=9.0V/2.00A power=18.0W retries=0 faults=none
+phase=thin_cable state=READY req=20.0V/1.50A active=20.0V/1.50A power=30.0W retries=0 faults=none
+phase=brownout state=FAULT req=5.0V/0.50A active=5.0V/0.50A power=2.5W retries=0 faults=brownout
+phase=reject_loop state=FAULT req=5.0V/0.50A active=5.0V/0.50A power=2.5W retries=3 faults=retry_exhausted
+```
+
 ## Build
 
 Build and test everything:
@@ -204,6 +219,7 @@ make run-attest
 make run-rtos
 make run-imu
 make run-reflow
+make run-pd
 ```
 
 ## Why This Set Works on GitHub
@@ -225,6 +241,7 @@ make run-reflow
 - Port the RTOS lab to FreeRTOS or Zephyr task traces on real hardware
 - Port the IMU estimator to an MPU6050 or BMI270 SPI/I2C driver stack
 - Port the reflow controller to an STM32, MAX31855 thermocouple frontend, and SSR output stage
+- Port the USB PD sink controller to an STM32, FUSB302 or STUSB4500, and real power-path telemetry
 
 ## References
 

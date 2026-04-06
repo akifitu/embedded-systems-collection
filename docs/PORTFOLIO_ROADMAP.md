@@ -11,6 +11,7 @@
 - Add a ninth real-time scheduling project with deadline and watchdog behavior
 - Add a tenth sensor-fusion project with IMU attitude estimation
 - Add an eleventh thermal-control project with reflow profile tracking and oven safety
+- Add a twelfth USB-C power-negotiation project with sink policy control
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 
