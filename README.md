@@ -23,6 +23,7 @@ problems that show up in production teams.
 - IMU sensor fusion and motion-state estimation through an attitude estimator
 - Thermal-process control through a reflow oven profile controller
 - USB-C power negotiation and safe fallback through a USB PD sink controller
+- Motion control through a stepper homing and trapezoidal trajectory planner
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -41,6 +42,7 @@ flowchart LR
     Host --> IMU[IMU Attitude Estimator]
     Host --> RO[Reflow Oven Controller]
     Host --> PD[USB PD Sink Controller]
+    Host --> SMP[Stepper Motion Planner]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -53,6 +55,7 @@ flowchart LR
     IMU --> Fusion[Complementary Filter and Motion State]
     RO --> Thermal[PID Heat Control and Reflow Safety]
     PD --> Negotiation[PDO Selection and Fault Fallback]
+    SMP --> Motion[Homing, Limits, and Trapezoidal Moves]
 ```
 
 ## Projects
@@ -71,6 +74,7 @@ flowchart LR
 | `imu-attitude-estimator` | Complementary filter, tilt estimation, motion states | `make run-imu` | [Architecture](projects/imu-attitude-estimator/docs/ARCHITECTURE.md) |
 | `reflow-oven-controller` | Reflow profile tracking, PID heater control, safety interlocks | `make run-reflow` | [Architecture](projects/reflow-oven-controller/docs/ARCHITECTURE.md) |
 | `usb-pd-sink-controller` | USB PD PDO selection, derating, retries, brownout fallback | `make run-pd` | [Architecture](projects/usb-pd-sink-controller/docs/ARCHITECTURE.md) |
+| `stepper-motion-planner` | Homing, trapezoidal move planning, limit and stall faults | `make run-stepper` | [Architecture](projects/stepper-motion-planner/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -196,6 +200,17 @@ phase=brownout state=FAULT req=5.0V/0.50A active=5.0V/0.50A power=2.5W retries=0
 phase=reject_loop state=FAULT req=5.0V/0.50A active=5.0V/0.50A power=2.5W retries=3 faults=retry_exhausted
 ```
 
+### Stepper Motion Planner
+
+```text
+phase=home_seek state=HOMING pos=1240 target=0 rate=1200 dir=REV progress=50 faults=none
+phase=home_latched state=READY pos=0 target=0 rate=0 dir=STOP progress=100 faults=none
+phase=move_profile state=MOVING pos=1574 target=12000 rate=4800 dir=FWD progress=13 faults=none
+phase=move_complete state=READY pos=12000 target=12000 rate=0 dir=STOP progress=100 faults=none
+phase=limit_abort state=FAULT pos=15014 target=16000 rate=0 dir=STOP progress=75 faults=limit_hit
+phase=rehome_complete state=READY pos=0 target=0 rate=0 dir=STOP progress=100 faults=none
+```
+
 ## Build
 
 Build and test everything:
@@ -220,6 +235,7 @@ make run-rtos
 make run-imu
 make run-reflow
 make run-pd
+make run-stepper
 ```
 
 ## Why This Set Works on GitHub
@@ -242,6 +258,7 @@ make run-pd
 - Port the IMU estimator to an MPU6050 or BMI270 SPI/I2C driver stack
 - Port the reflow controller to an STM32, MAX31855 thermocouple frontend, and SSR output stage
 - Port the USB PD sink controller to an STM32, FUSB302 or STUSB4500, and real power-path telemetry
+- Port the stepper planner to an STM32 or RP2040 with TMC2209/A4988 drivers and real limit switches
 
 ## References
 
