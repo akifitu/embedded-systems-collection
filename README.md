@@ -1,62 +1,85 @@
 # Embedded Systems Portfolio Lab
 
-This repository is a focused embedded-systems portfolio starter built to be
-strong on GitHub even before real hardware is attached. The projects are
-written in portable C, compile on the host with a standard C compiler, and
-model problems that appear in production firmware teams.
+[![CI](https://github.com/akifitu/embedded-systems-portfolio-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/akifitu/embedded-systems-portfolio-lab/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-0f766e.svg)](LICENSE)
+[![Language: C](https://img.shields.io/badge/language-C-1d4ed8.svg)](https://en.wikipedia.org/wiki/C_(programming_language))
+
+This repository is an embedded-systems portfolio designed to look credible on
+GitHub before any real board is connected. The code is written in portable C,
+builds on the host with a standard compiler, and models the kind of firmware
+problems that show up in production teams.
+
+## Portfolio Signal
+
+- Safety and control logic through a battery-management state machine
+- Reliability and upgrade strategy through an A/B OTA bootloader model
+- Bus communication literacy through a CAN telemetry scheduler
+- Repeatability through `make test` and a GitHub Actions CI pipeline
+
+## System Map
+
+```mermaid
+flowchart LR
+    Host[Host Build and Tests] --> BMS[Smart BMS Firmware]
+    Host --> OTA[OTA Bootloader Simulator]
+    Host --> CAN[CAN Telemetry Node]
+    BMS --> Safety[Fault Detection and SoC]
+    OTA --> Reliability[CRC32, Trial Boot, Rollback]
+    CAN --> VehicleBus[Periodic and Fault CAN Frames]
+```
 
 ## Projects
 
-### 1. Smart BMS Firmware
+| Project | Focus | Demo | Deep Dive |
+| --- | --- | --- | --- |
+| `smart-bms-firmware` | State machine, balancing, faults, SoC | `make run-bms` | [Architecture](projects/smart-bms-firmware/docs/ARCHITECTURE.md) |
+| `ota-bootloader-simulator` | A/B staging, CRC32, confirm, rollback | `make run-ota` | [Architecture](projects/ota-bootloader-simulator/docs/ARCHITECTURE.md) |
+| `can-telemetry-node` | CAN scheduling, fault priority, frame packing | `make run-can` | [Architecture](projects/can-telemetry-node/docs/ARCHITECTURE.md) |
 
-Path: `projects/smart-bms-firmware`
+## Recorded Demo Snapshots
 
-Highlights:
-- Battery-management state machine
-- Fault detection for voltage, temperature, current, and imbalance
-- Coulomb-counting based state-of-charge estimator
-- Host-side simulation and tests
+### Smart BMS Firmware
 
-### 2. OTA Bootloader Simulator
+```text
+step=0 state=IDLE soc=72.00 charge=1 discharge=1 faults=none balancing=[0 0 0 0]
+step=1 state=CHARGING soc=72.02 charge=1 discharge=0 faults=none balancing=[0 0 0 1]
+step=2 state=CHARGING soc=72.03 charge=1 discharge=0 faults=none balancing=[0 0 0 1]
+step=3 state=DISCHARGING soc=72.00 charge=0 discharge=1 faults=none balancing=[0 0 0 0]
+step=4 state=FAULT soc=72.00 charge=0 discharge=0 faults= overtemp balancing=[0 0 0 0]
+```
 
-Path: `projects/ota-bootloader-simulator`
+### OTA Bootloader Simulator
 
-Highlights:
-- A/B slot update flow
-- Staged image reception with CRC32 verification
-- Test upgrade, confirm, and rollback behavior
-- MCUboot-inspired concepts without external dependencies
+```text
+factory: v1.0.0 crc=19A140E2 size=16 confirmed=1
+after test upgrade reboot: v1.1.0 crc=4CE93DFC size=22 confirmed=0
+reboot without confirm: v1.0.0 crc=19A140E2 size=16 confirmed=1
+after permanent upgrade reboot: v1.2.0 crc=0E7C2932 size=27 confirmed=1
+final reboot: v1.2.0 crc=0E7C2932 size=27 confirmed=1
+```
 
-### 3. CAN Telemetry Node
+### CAN Telemetry Node
 
-Path: `projects/can-telemetry-node`
-
-Highlights:
-- Deterministic periodic frame scheduling
-- Fault-priority CAN event emission
-- SocketCAN-friendly frame formatting
-- Host simulation and tests
-
-## Why This Set
-
-These three projects deliberately cover a useful embedded hiring surface:
-
-- Control logic and safety state machines
-- Firmware update and boot reliability
-- Bus communication and telemetry design
-
-That combination reads much better on GitHub than only toy sensor demos.
+```text
+tick=2 emitted=3
+  vcan0 080 [2] 07 00 00 00 00 00 00 00
+  vcan0 180 [6] 60 04 1E 00 D4 02 00 00
+  vcan0 280 [4] 16 03 07 00 00 00 00 00
+tick=4 emitted=2
+  vcan0 080 [2] 00 00 00 00 00 00 00 00
+  vcan0 180 [6] C0 12 28 00 CD 02 00 00
+```
 
 ## Build
 
-Run everything:
+Build and test everything:
 
 ```sh
 make all
 make test
 ```
 
-Run demos:
+Run project demos:
 
 ```sh
 make run-bms
@@ -64,13 +87,17 @@ make run-ota
 make run-can
 ```
 
-Each project is self-contained and can later be split into its own GitHub repo.
+## Why This Set Works on GitHub
+
+- It covers control, reliability, and communications instead of only toy sensor code.
+- Each project produces deterministic output that reviewers can inspect quickly.
+- The repository is split into standalone subprojects that can later become separate repos.
 
 ## Suggested Next Hardware Targets
 
-- Port the BMS project to STM32 or ESP32 with ADC and GPIO drivers
+- Port the BMS project to STM32 or ESP32 with ADC, GPIO, and contactor control
 - Port the OTA simulator to Zephyr or MCUboot integration tests
-- Bridge the CAN node to Linux `vcan` or a real MCP2515 interface
+- Bridge the CAN node to Linux `vcan` or a real MCP2515 transceiver
 
 ## References
 
