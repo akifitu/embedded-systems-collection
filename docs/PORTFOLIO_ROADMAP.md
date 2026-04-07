@@ -35,6 +35,7 @@
 - Add a thirty-third respiratory-support project with pressure-targeted breaths, apnea backup, and patient alarm handling
 - Add a thirty-fourth solar-power project with MPPT duty tracking, bulk or absorb or float charging, and charger fault lockout
 - Add a thirty-fifth battery-swap project with pack validation, precharge sequencing, dock latch control, and safe release handling
+- Add a thirty-sixth redundancy-management project with triplex lane voting, drift isolation, timeout handling, and degraded actuator authority
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 

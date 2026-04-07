@@ -59,6 +59,7 @@ problems that show up in production teams.
 - Respiratory safety logic through a ventilator breath cycle controller
 - Solar power conversion through an MPPT charge controller
 - Modular high-current docking safety through a battery swap dock controller
+- Triplex actuator-command voting through a redundant flight control voter
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -100,6 +101,7 @@ flowchart LR
     Host --> VENT[Ventilator Breath Cycle Controller]
     Host --> SOLAR[Solar MPPT Charge Controller]
     Host --> SWAP[Battery Swap Dock Controller]
+    Host --> TVOTE[Triplex Flight Control Voter]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -135,6 +137,7 @@ flowchart LR
     VENT --> Respiratory[Backup Breaths, Plateau Hold, and Patient Alarms]
     SOLAR --> PowerConv[MPPT Duty Tracking, Absorb Float, and Thermal Fault Lockout]
     SWAP --> Docking[Pack Validation, Precharge, Latch, and Safe Release]
+    TVOTE --> SafetyVote[Lane Voting, Isolation, and Degraded Actuator Authority]
 ```
 
 ## Projects
@@ -176,6 +179,7 @@ flowchart LR
 | `ventilator-breath-cycle-controller` | Patient-triggered inhale, backup breaths, plateau hold, and respiratory alarm handling | `make run-vent` | [Architecture](projects/ventilator-breath-cycle-controller/docs/ARCHITECTURE.md) |
 | `solar-mppt-charge-controller` | Perturb-observe MPPT, bulk or absorb or float charging, and reverse or thermal fault handling | `make run-solar` | [Architecture](projects/solar-mppt-charge-controller/docs/ARCHITECTURE.md) |
 | `battery-swap-dock-controller` | Pack validation, precharge sequencing, dock latch control, and thermal or auth fault lockout | `make run-swap` | [Architecture](projects/battery-swap-dock-controller/docs/ARCHITECTURE.md) |
+| `triplex-flight-control-voter` | Triple-lane voting, drift isolation, timeout handling, and degraded actuator authority | `make run-triplex` | [Architecture](projects/triplex-flight-control-voter/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -573,6 +577,18 @@ phase=thermal_fault state=FAULT cmd=LATCH_FAULT fault=OVER_TEMP pack=PRESENT lat
 phase=reset_ready state=IDLE cmd=RESET_DOCK fault=NONE pack=ABSENT latch=OPEN main=OPEN precharge=OFF fan=OFF delta=0mV progress=0
 ```
 
+### Triplex Flight Control Voter
+
+```text
+phase=standby state=IDLE cmd=HOLD_LAST_GOOD fault=NONE active=NONE isolated=NONE voted=0.0% spread=0.0% servo=OFF
+phase=triplex_sync state=SYNC cmd=VOTE_OUTPUT fault=NONE active=ABC isolated=NONE voted=42.0% spread=0.3% servo=ON
+phase=lane_c_isolated state=DEGRADED cmd=ISOLATE_LANE fault=LANE_C_DRIFT active=AB isolated=C voted=43.2% spread=6.0% servo=ON
+phase=degraded_hold state=DEGRADED cmd=VOTE_OUTPUT fault=NONE active=AB isolated=C voted=43.5% spread=0.1% servo=ON
+phase=split_vote_fault state=FAULT cmd=LATCH_FAULT fault=MULTI_LANE_FAIL active=AB isolated=C voted=43.5% spread=6.0% servo=OFF
+phase=timeout_fault state=DEGRADED cmd=ISOLATE_LANE fault=LANE_TIMEOUT active=AC isolated=B voted=41.1% spread=0.2% servo=ON
+phase=reset_ready state=IDLE cmd=RESET_VOTER fault=NONE active=NONE isolated=NONE voted=0.0% spread=0.0% servo=OFF
+```
+
 ## Build
 
 Build and test everything:
@@ -620,6 +636,7 @@ make run-wind
 make run-vent
 make run-solar
 make run-swap
+make run-triplex
 ```
 
 ## Why This Set Works on GitHub
@@ -665,6 +682,7 @@ make run-swap
 - Port the ventilator controller to an STM32, NXP, or medical-control board with blower PWM drive, inspiratory and expiratory valve outputs, pressure and flow sensors, and gas-supply supervision
 - Port the solar MPPT controller to an STM32, AVR, or power board with synchronous buck PWM, panel current and voltage ADCs, battery feedback, NTC temperature sensing, and reverse-polarity protection
 - Port the battery swap dock controller to an STM32, NXP, or automotive power board with latch actuators, precharge relays, main contactors, alignment sensing, pack auth transport, and connector temperature telemetry
+- Port the triplex voter to a safety MCU or aerospace controller with triple sensor buses, watchdog-crosscheck inputs, actuator command outputs, and maintenance isolation telemetry
 
 ## References
 
