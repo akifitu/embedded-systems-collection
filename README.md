@@ -41,6 +41,7 @@ problems that show up in production teams.
 - Medical-device dosing safety through an infusion pump controller
 - Vertical-transport protection through an elevator door safety controller
 - Spacecraft power autonomy through a satellite EPS load-shed controller
+- Combustion lockout logic through a gas burner flame safeguard controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -77,6 +78,7 @@ flowchart LR
     Host --> INFUSE[Infusion Pump Safety Controller]
     Host --> ELEV[Elevator Door Safety Controller]
     Host --> SEPS[Satellite EPS Load Shed Controller]
+    Host --> BURNER[Gas Burner Flame Safeguard Controller]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -107,6 +109,7 @@ flowchart LR
     INFUSE --> MedDevice[Occlusion Alarms, KVO, and Therapy Reset]
     ELEV --> BuildingTransport[Obstruction Recovery, Nudge Mode, and Lock Supervision]
     SEPS --> SpacePower[Load Shedding, Survival Mode, and Eclipse Recovery]
+    BURNER --> Combustion[Prepurge, Flame Prove, and Hard Lockout]
 ```
 
 ## Projects
@@ -143,6 +146,7 @@ flowchart LR
 | `infusion-pump-safety-controller` | Priming, infusion, KVO fallback, and occlusion or air-in-line alarm shutdown | `make run-infusion` | [Architecture](projects/infusion-pump-safety-controller/docs/ARCHITECTURE.md) |
 | `elevator-door-safety-controller` | Opening, obstruction retry, nudge close, and door-lock or motion-timeout fault handling | `make run-elevator` | [Architecture](projects/elevator-door-safety-controller/docs/ARCHITECTURE.md) |
 | `satellite-eps-load-shed-controller` | Eclipse load shedding, survival mode, recovery, and battery or bus protection | `make run-sat-eps` | [Architecture](projects/satellite-eps-load-shed-controller/docs/ARCHITECTURE.md) |
+| `gas-burner-flame-safeguard-controller` | Prepurge, ignition prove, postpurge, and airflow or interlock lockout handling | `make run-burner` | [Architecture](projects/gas-burner-flame-safeguard-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -480,6 +484,18 @@ phase=undervoltage_fault state=FAULT cmd=LATCH_FAULT fault=BUS_UNDERVOLTAGE sun=
 phase=reset_ready state=NOMINAL cmd=RESET_EPS fault=NONE sun=YES soc=66 bus=7620mV payload=ON heater=OFF radio=HIGH adcs=FULL budget=56W
 ```
 
+### Gas Burner Flame Safeguard Controller
+
+```text
+phase=idle state=IDLE cmd=HOLD_OFF fault=NONE fan=OFF igniter=OFF valve=CLOSED flame=NO progress=0
+phase=prepurge state=PREPURGE cmd=START_PREPURGE fault=NONE fan=ON igniter=OFF valve=CLOSED flame=NO progress=50
+phase=ignition_trial state=IGNITION cmd=TRIAL_IGNITE fault=NONE fan=ON igniter=ON valve=OPEN flame=NO progress=50
+phase=flame_proven state=RUNNING cmd=HOLD_FLAME fault=NONE fan=ON igniter=OFF valve=OPEN flame=YES progress=100
+phase=postpurge state=POSTPURGE cmd=POSTPURGE_FAN fault=NONE fan=ON igniter=OFF valve=CLOSED flame=NO progress=50
+phase=ignition_fail state=LOCKOUT cmd=LATCH_LOCKOUT fault=IGNITION_FAIL fan=OFF igniter=OFF valve=CLOSED flame=NO progress=0
+phase=reset_ready state=IDLE cmd=RESET_BURNER fault=NONE fan=OFF igniter=OFF valve=CLOSED flame=NO progress=0
+```
+
 ## Build
 
 Build and test everything:
@@ -522,6 +538,7 @@ make run-fire
 make run-infusion
 make run-elevator
 make run-sat-eps
+make run-burner
 ```
 
 ## Why This Set Works on GitHub
@@ -562,6 +579,7 @@ make run-sat-eps
 - Port the infusion pump controller to an STM32, MSP430, or NXP medical MCU with motor drive, pressure sensor ADC, air-in-line detector, door interlock, and clamp feedback
 - Port the elevator door controller to an STM32, AVR, or lift-controller MCU with inverter drive, safety-edge input, door-position sensors, lock contacts, and car-at-floor interlocks
 - Port the satellite EPS controller to a cubesat power board with battery telemetry ADCs, solar-regulator monitoring, switched payload rails, heater outputs, and watchdog-linked safe mode
+- Port the burner controller to an STM32, AVR, or burner-management board with blower relay, flame-rod input, airflow prove switch, gas valve outputs, and lockout annunciation
 
 ## References
 

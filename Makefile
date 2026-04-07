@@ -28,9 +28,10 @@ PROJECTS := \
 	projects/fire-panel-loop-controller \
 	projects/infusion-pump-safety-controller \
 	projects/elevator-door-safety-controller \
-	projects/satellite-eps-load-shed-controller
+	projects/satellite-eps-load-shed-controller \
+	projects/gas-burner-flame-safeguard-controller
 
-.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer run-sboot run-uds run-touch run-gpsdo run-uav run-inverter run-abs run-evse run-lift run-gen run-crossing run-fire run-infusion run-elevator run-sat-eps
+.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer run-sboot run-uds run-touch run-gpsdo run-uav run-inverter run-abs run-evse run-lift run-gen run-crossing run-fire run-infusion run-elevator run-sat-eps run-burner
 
 all:
 	@for project in $(PROJECTS); do $(MAKE) -C $$project all; done
@@ -130,3 +131,6 @@ run-elevator:
 
 run-sat-eps:
 	@$(MAKE) -C projects/satellite-eps-load-shed-controller run
+
+run-burner:
+	@$(MAKE) -C projects/gas-burner-flame-safeguard-controller run

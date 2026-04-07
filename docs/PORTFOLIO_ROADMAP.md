@@ -30,6 +30,7 @@
 - Add a twenty-eighth medical-device project with infusion control, KVO fallback, and occlusion or air-in-line alarm handling
 - Add a twenty-ninth vertical-transport project with door obstruction recovery, nudge close, and lock-fault handling
 - Add a thirtieth spacecraft-power project with eclipse load shedding, survival mode, and recharge recovery
+- Add a thirty-first combustion-safety project with prepurge, ignition prove, and hard lockout handling
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 
