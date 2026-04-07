@@ -55,6 +55,7 @@ problems that show up in production teams.
 - Vertical-transport protection through an elevator door safety controller
 - Spacecraft power autonomy through a satellite EPS load-shed controller
 - Combustion lockout logic through a gas burner flame safeguard controller
+- Renewable-energy shutdown logic through a wind turbine pitch safety controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -92,6 +93,7 @@ flowchart LR
     Host --> ELEV[Elevator Door Safety Controller]
     Host --> SEPS[Satellite EPS Load Shed Controller]
     Host --> BURNER[Gas Burner Flame Safeguard Controller]
+    Host --> WT[Wind Turbine Pitch Safety Controller]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -123,6 +125,7 @@ flowchart LR
     ELEV --> BuildingTransport[Obstruction Recovery, Nudge Mode, and Lock Supervision]
     SEPS --> SpacePower[Load Shedding, Survival Mode, and Eclipse Recovery]
     BURNER --> Combustion[Prepurge, Flame Prove, and Hard Lockout]
+    WT --> Renewable[Feathering, Storm Hold, and Pitch Fault Lockout]
 ```
 
 ## Projects
@@ -160,6 +163,7 @@ flowchart LR
 | `elevator-door-safety-controller` | Opening, obstruction retry, nudge close, and door-lock or motion-timeout fault handling | `make run-elevator` | [Architecture](projects/elevator-door-safety-controller/docs/ARCHITECTURE.md) |
 | `satellite-eps-load-shed-controller` | Eclipse load shedding, survival mode, recovery, and battery or bus protection | `make run-sat-eps` | [Architecture](projects/satellite-eps-load-shed-controller/docs/ARCHITECTURE.md) |
 | `gas-burner-flame-safeguard-controller` | Prepurge, ignition prove, postpurge, and airflow or interlock lockout handling | `make run-burner` | [Architecture](projects/gas-burner-flame-safeguard-controller/docs/ARCHITECTURE.md) |
+| `wind-turbine-pitch-safety-controller` | Startup release, generating trim, grid-loss feathering, and storm-hold or pitch fault handling | `make run-wind` | [Architecture](projects/wind-turbine-pitch-safety-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -509,6 +513,18 @@ phase=ignition_fail state=LOCKOUT cmd=LATCH_LOCKOUT fault=IGNITION_FAIL fan=OFF 
 phase=reset_ready state=IDLE cmd=RESET_BURNER fault=NONE fan=OFF igniter=OFF valve=CLOSED flame=NO progress=0
 ```
 
+### Wind Turbine Pitch Safety Controller
+
+```text
+phase=parked state=PARKED cmd=HOLD_PARK fault=NONE wind=4.0mps rpm=0 pitch=90deg gen=OFF brake=ON
+phase=startup state=STARTUP cmd=STARTUP_RELEASE fault=NONE wind=9.0mps rpm=220 pitch=18deg gen=OFF brake=OFF
+phase=generating state=GENERATING cmd=TRACK_POWER fault=NONE wind=12.0mps rpm=1480 pitch=14deg gen=ON brake=OFF
+phase=grid_trip_feather state=FEATHERING cmd=FEATHER_BLADES fault=NONE wind=13.0mps rpm=1320 pitch=82deg gen=OFF brake=OFF
+phase=storm_hold state=STORM_HOLD cmd=HOLD_STORM fault=NONE wind=28.0mps rpm=140 pitch=88deg gen=OFF brake=ON
+phase=hydraulic_fault state=FAULT cmd=LATCH_FAULT fault=HYDRAULIC_LOW wind=11.0mps rpm=1300 pitch=90deg gen=OFF brake=ON
+phase=reset_ready state=PARKED cmd=RESET_TURBINE fault=NONE wind=7.0mps rpm=0 pitch=90deg gen=OFF brake=ON
+```
+
 ## Build
 
 Build and test everything:
@@ -552,6 +568,7 @@ make run-infusion
 make run-elevator
 make run-sat-eps
 make run-burner
+make run-wind
 ```
 
 ## Why This Set Works on GitHub
@@ -593,6 +610,7 @@ make run-burner
 - Port the elevator door controller to an STM32, AVR, or lift-controller MCU with inverter drive, safety-edge input, door-position sensors, lock contacts, and car-at-floor interlocks
 - Port the satellite EPS controller to a cubesat power board with battery telemetry ADCs, solar-regulator monitoring, switched payload rails, heater outputs, and watchdog-linked safe mode
 - Port the burner controller to an STM32, AVR, or burner-management board with blower relay, flame-rod input, airflow prove switch, gas valve outputs, and lockout annunciation
+- Port the wind turbine controller to an STM32, C2000, or industrial pitch board with rotor-speed capture, hydraulic-pressure sensing, grid contact feedback, brake relay, and blade encoder inputs
 
 ## References
 

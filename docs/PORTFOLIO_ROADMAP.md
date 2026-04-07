@@ -31,6 +31,7 @@
 - Add a twenty-ninth vertical-transport project with door obstruction recovery, nudge close, and lock-fault handling
 - Add a thirtieth spacecraft-power project with eclipse load shedding, survival mode, and recharge recovery
 - Add a thirty-first combustion-safety project with prepurge, ignition prove, and hard lockout handling
+- Add a thirty-second renewable-energy project with startup release, feather shutdown, and storm-hold pitch control
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 
