@@ -36,6 +36,7 @@ problems that show up in production teams.
 - EV charge-port sequencing through an EVSE controller
 - Fluid-process automation through a dual-pump lift-station controller
 - Backup-power orchestration through a diesel generator autostart controller
+- Railway warning control through a grade-crossing controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -67,6 +68,7 @@ flowchart LR
     Host --> EVSE[EVSE Charge Port Controller]
     Host --> LIFT[Dual-Pump Lift Station Controller]
     Host --> GEN[Diesel Generator Autostart Controller]
+    Host --> XING[Railway Grade Crossing Controller]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -92,6 +94,7 @@ flowchart LR
     EVSE --> Charging[Control Pilot, GFCI, Contactor, and Derating]
     LIFT --> Water[Lead-Lag Pumps, Wet-Well Level, and Overflow Protection]
     GEN --> Backup[Utility Loss, Crank Retry, Warmup, and Cooldown]
+    XING --> Rail[Approach Warning, Gate Motion, and Lamp Fault Lockout]
 ```
 
 ## Projects
@@ -123,6 +126,7 @@ flowchart LR
 | `evse-charge-port-controller` | Pilot-state decode, current advertisement, GFCI trip, cooldown recovery | `make run-evse` | [Architecture](projects/evse-charge-port-controller/docs/ARCHITECTURE.md) |
 | `dual-pump-lift-station-controller` | Lead-lag alternation, high-high assist, seal fault lockout | `make run-lift` | [Architecture](projects/dual-pump-lift-station-controller/docs/ARCHITECTURE.md) |
 | `diesel-generator-autostart-controller` | Utility-loss autostart, crank retry, low-oil fault, cooldown stop | `make run-gen` | [Architecture](projects/diesel-generator-autostart-controller/docs/ARCHITECTURE.md) |
+| `railway-grade-crossing-controller` | Approach warning, gate sequencing, lamp fault and gate-timeout lockout | `make run-crossing` | [Architecture](projects/railway-grade-crossing-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -399,6 +403,18 @@ phase=low_oil_fault state=FAULT cmd=STOP_ENGINE utility=OFF rpm=1460 batt=24.9V 
 phase=reset_ready state=IDLE cmd=OPEN_CONTACTOR utility=ON rpm=0 batt=25.3V tries=0 contactor=OPEN fault=NONE
 ```
 
+### Railway Grade Crossing Controller
+
+```text
+phase=idle state=IDLE cmd=GATE_UP zone=CLEAR gate=UP warn=OFF bell=OFF fault=NONE
+phase=approach state=PREWARN cmd=START_WARNING zone=APPROACH gate=UP warn=ON bell=ON fault=NONE
+phase=lowering state=LOWERING cmd=LOWER_GATE zone=APPROACH gate=MOVING warn=ON bell=ON fault=NONE
+phase=occupied state=PROTECTED cmd=HOLD_DOWN zone=ISLAND gate=DOWN warn=ON bell=OFF fault=NONE
+phase=clearing state=RAISING cmd=RAISE_GATE zone=CLEAR gate=MOVING warn=ON bell=OFF fault=NONE
+phase=lamp_fault state=FAULT cmd=LATCH_FAULT zone=APPROACH gate=DOWN warn=ON bell=ON fault=LAMP_FAIL
+phase=recovered state=IDLE cmd=GATE_UP zone=CLEAR gate=UP warn=OFF bell=OFF fault=NONE
+```
+
 ## Build
 
 Build and test everything:
@@ -436,6 +452,7 @@ make run-abs
 make run-evse
 make run-lift
 make run-gen
+make run-crossing
 ```
 
 ## Why This Set Works on GitHub
@@ -471,6 +488,7 @@ make run-gen
 - Port the EVSE controller to an STM32 or NXP charger MCU with CP/PP ADC capture, GFCI input, contactor drivers, and lock actuator feedback
 - Port the lift-station controller to an STM32 or PLC-class MCU with ultrasonic level sensing, pump contactors, seal-fail inputs, and overflow alarms
 - Port the generator controller to an STM32, AVR, or industrial controller with mains sensing, starter relay drive, oil-pressure input, and ATS interlock feedback
+- Port the grade-crossing controller to a safety MCU or PLC with track-circuit inputs, flasher drivers, bell output, and barrier position sensing
 
 ## References
 
