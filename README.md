@@ -40,6 +40,7 @@ problems that show up in production teams.
 - Building life-safety logic through a fire panel loop controller
 - Medical-device dosing safety through an infusion pump controller
 - Vertical-transport protection through an elevator door safety controller
+- Spacecraft power autonomy through a satellite EPS load-shed controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -75,6 +76,7 @@ flowchart LR
     Host --> FIRE[Fire Panel Loop Controller]
     Host --> INFUSE[Infusion Pump Safety Controller]
     Host --> ELEV[Elevator Door Safety Controller]
+    Host --> SEPS[Satellite EPS Load Shed Controller]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -104,6 +106,7 @@ flowchart LR
     FIRE --> LifeSafety[Smoke Verify, NAC Silence, and Trouble Latching]
     INFUSE --> MedDevice[Occlusion Alarms, KVO, and Therapy Reset]
     ELEV --> BuildingTransport[Obstruction Recovery, Nudge Mode, and Lock Supervision]
+    SEPS --> SpacePower[Load Shedding, Survival Mode, and Eclipse Recovery]
 ```
 
 ## Projects
@@ -139,6 +142,7 @@ flowchart LR
 | `fire-panel-loop-controller` | Smoke verification, NAC silence, manual-pull alarm, and supervised-loop trouble latching | `make run-fire` | [Architecture](projects/fire-panel-loop-controller/docs/ARCHITECTURE.md) |
 | `infusion-pump-safety-controller` | Priming, infusion, KVO fallback, and occlusion or air-in-line alarm shutdown | `make run-infusion` | [Architecture](projects/infusion-pump-safety-controller/docs/ARCHITECTURE.md) |
 | `elevator-door-safety-controller` | Opening, obstruction retry, nudge close, and door-lock or motion-timeout fault handling | `make run-elevator` | [Architecture](projects/elevator-door-safety-controller/docs/ARCHITECTURE.md) |
+| `satellite-eps-load-shed-controller` | Eclipse load shedding, survival mode, recovery, and battery or bus protection | `make run-sat-eps` | [Architecture](projects/satellite-eps-load-shed-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -464,6 +468,18 @@ phase=lock_fault state=FAULT cmd=LATCH_FAULT fault=LOCK_FAIL door=CLOSED motor=S
 phase=reset_ready state=CLOSED cmd=RESET_DOOR fault=NONE door=CLOSED motor=STOP lock=LOCKED buzzer=OFF retry=0
 ```
 
+### Satellite EPS Load Shed Controller
+
+```text
+phase=nominal_daylight state=NOMINAL cmd=HOLD_FULL_POWER fault=NONE sun=YES soc=78 bus=7600mV payload=ON heater=ON radio=HIGH adcs=FULL budget=60W
+phase=eclipse_shed state=SHED cmd=SHED_NONCRITICAL fault=NONE sun=NO soc=42 bus=7280mV payload=OFF heater=OFF radio=BEACON adcs=FULL budget=16W
+phase=deep_eclipse state=SURVIVAL cmd=ENTER_SURVIVAL fault=NONE sun=NO soc=16 bus=6940mV payload=OFF heater=OFF radio=BEACON adcs=SAFE budget=8W
+phase=recharge_recovery state=RECOVERY cmd=RESTORE_LOADS fault=NONE sun=YES soc=34 bus=7420mV payload=OFF heater=ON radio=BEACON adcs=FULL budget=24W
+phase=nominal_restored state=NOMINAL cmd=HOLD_FULL_POWER fault=NONE sun=YES soc=62 bus=7580mV payload=ON heater=OFF radio=HIGH adcs=FULL budget=58W
+phase=undervoltage_fault state=FAULT cmd=LATCH_FAULT fault=BUS_UNDERVOLTAGE sun=NO soc=18 bus=6480mV payload=OFF heater=OFF radio=BEACON adcs=SAFE budget=5W
+phase=reset_ready state=NOMINAL cmd=RESET_EPS fault=NONE sun=YES soc=66 bus=7620mV payload=ON heater=OFF radio=HIGH adcs=FULL budget=56W
+```
+
 ## Build
 
 Build and test everything:
@@ -505,6 +521,7 @@ make run-crossing
 make run-fire
 make run-infusion
 make run-elevator
+make run-sat-eps
 ```
 
 ## Why This Set Works on GitHub
@@ -544,6 +561,7 @@ make run-elevator
 - Port the fire panel controller to an STM32 or panel MCU with supervised IDC/NAC loops, smoke detectors, pull stations, horn/strobe drivers, and annunciator feedback
 - Port the infusion pump controller to an STM32, MSP430, or NXP medical MCU with motor drive, pressure sensor ADC, air-in-line detector, door interlock, and clamp feedback
 - Port the elevator door controller to an STM32, AVR, or lift-controller MCU with inverter drive, safety-edge input, door-position sensors, lock contacts, and car-at-floor interlocks
+- Port the satellite EPS controller to a cubesat power board with battery telemetry ADCs, solar-regulator monitoring, switched payload rails, heater outputs, and watchdog-linked safe mode
 
 ## References
 
