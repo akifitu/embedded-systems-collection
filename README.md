@@ -35,6 +35,7 @@ problems that show up in production teams.
 - Chassis slip control through an ABS brake controller
 - EV charge-port sequencing through an EVSE controller
 - Fluid-process automation through a dual-pump lift-station controller
+- Backup-power orchestration through a diesel generator autostart controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -65,6 +66,7 @@ flowchart LR
     Host --> ABS[Wheel-Slip ABS Controller]
     Host --> EVSE[EVSE Charge Port Controller]
     Host --> LIFT[Dual-Pump Lift Station Controller]
+    Host --> GEN[Diesel Generator Autostart Controller]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -89,6 +91,7 @@ flowchart LR
     ABS --> Chassis[Slip Control, Valve Modulation, and Fault Detection]
     EVSE --> Charging[Control Pilot, GFCI, Contactor, and Derating]
     LIFT --> Water[Lead-Lag Pumps, Wet-Well Level, and Overflow Protection]
+    GEN --> Backup[Utility Loss, Crank Retry, Warmup, and Cooldown]
 ```
 
 ## Projects
@@ -119,6 +122,7 @@ flowchart LR
 | `wheel-slip-abs-controller` | Slip estimation, hydraulic valve modulation, wheel-sensor fault handling | `make run-abs` | [Architecture](projects/wheel-slip-abs-controller/docs/ARCHITECTURE.md) |
 | `evse-charge-port-controller` | Pilot-state decode, current advertisement, GFCI trip, cooldown recovery | `make run-evse` | [Architecture](projects/evse-charge-port-controller/docs/ARCHITECTURE.md) |
 | `dual-pump-lift-station-controller` | Lead-lag alternation, high-high assist, seal fault lockout | `make run-lift` | [Architecture](projects/dual-pump-lift-station-controller/docs/ARCHITECTURE.md) |
+| `diesel-generator-autostart-controller` | Utility-loss autostart, crank retry, low-oil fault, cooldown stop | `make run-gen` | [Architecture](projects/diesel-generator-autostart-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -382,6 +386,19 @@ phase=seal_fault state=FAULT cmd=STOP_ALL lead=B level=68 inflow=100 ready=AB fa
 phase=recovered state=IDLE cmd=STOP_ALL lead=B level=24 inflow=20 ready=AB fault=NONE
 ```
 
+### Diesel Generator Autostart Controller
+
+```text
+phase=utility_ok state=IDLE cmd=OPEN_CONTACTOR utility=ON rpm=0 batt=25.4V tries=0 contactor=OPEN fault=NONE
+phase=outage_detected state=START_DELAY cmd=PREHEAT utility=OFF rpm=0 batt=25.1V tries=0 contactor=OPEN fault=NONE
+phase=cranking state=CRANKING cmd=CRANK_START utility=OFF rpm=280 batt=24.6V tries=1 contactor=OPEN fault=NONE
+phase=warmup state=WARMUP cmd=OPEN_CONTACTOR utility=OFF rpm=1450 batt=24.8V tries=1 contactor=OPEN fault=NONE
+phase=running state=RUNNING cmd=CLOSE_CONTACTOR utility=OFF rpm=1500 batt=25.0V tries=1 contactor=CLOSED fault=NONE
+phase=utility_restore state=COOLDOWN cmd=COOL_ENGINE utility=ON rpm=1490 batt=25.1V tries=1 contactor=OPEN fault=NONE
+phase=low_oil_fault state=FAULT cmd=STOP_ENGINE utility=OFF rpm=1460 batt=24.9V tries=1 contactor=OPEN fault=LOW_OIL
+phase=reset_ready state=IDLE cmd=OPEN_CONTACTOR utility=ON rpm=0 batt=25.3V tries=0 contactor=OPEN fault=NONE
+```
+
 ## Build
 
 Build and test everything:
@@ -418,6 +435,7 @@ make run-inverter
 make run-abs
 make run-evse
 make run-lift
+make run-gen
 ```
 
 ## Why This Set Works on GitHub
@@ -452,6 +470,7 @@ make run-lift
 - Port the ABS controller to an automotive MCU with wheel-speed capture, valve drivers, pressure sensors, and pump current monitoring
 - Port the EVSE controller to an STM32 or NXP charger MCU with CP/PP ADC capture, GFCI input, contactor drivers, and lock actuator feedback
 - Port the lift-station controller to an STM32 or PLC-class MCU with ultrasonic level sensing, pump contactors, seal-fail inputs, and overflow alarms
+- Port the generator controller to an STM32, AVR, or industrial controller with mains sensing, starter relay drive, oil-pressure input, and ATS interlock feedback
 
 ## References
 

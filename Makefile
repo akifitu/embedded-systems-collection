@@ -22,9 +22,10 @@ PROJECTS := \
 	projects/grid-tie-inverter-guard \
 	projects/wheel-slip-abs-controller \
 	projects/evse-charge-port-controller \
-	projects/dual-pump-lift-station-controller
+	projects/dual-pump-lift-station-controller \
+	projects/diesel-generator-autostart-controller
 
-.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer run-sboot run-uds run-touch run-gpsdo run-uav run-inverter run-abs run-evse run-lift
+.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer run-sboot run-uds run-touch run-gpsdo run-uav run-inverter run-abs run-evse run-lift run-gen
 
 all:
 	@for project in $(PROJECTS); do $(MAKE) -C $$project all; done
@@ -106,3 +107,6 @@ run-evse:
 
 run-lift:
 	@$(MAKE) -C projects/dual-pump-lift-station-controller run
+
+run-gen:
+	@$(MAKE) -C projects/diesel-generator-autostart-controller run
