@@ -26,6 +26,7 @@
 - Add a twenty-fourth fluid-control project with dual-pump alternation, high-high assist, and wet-well fault handling
 - Add a twenty-fifth backup-power project with generator autostart, crank retries, and cooldown logic
 - Add a twenty-sixth railway-safety project with grade-crossing warning, gate sequencing, and lamp fault lockout
+- Add a twenty-seventh building-life-safety project with smoke verification, NAC silence, and supervised-loop trouble latching
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 

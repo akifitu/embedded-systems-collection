@@ -24,9 +24,10 @@ PROJECTS := \
 	projects/evse-charge-port-controller \
 	projects/dual-pump-lift-station-controller \
 	projects/diesel-generator-autostart-controller \
-	projects/railway-grade-crossing-controller
+	projects/railway-grade-crossing-controller \
+	projects/fire-panel-loop-controller
 
-.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer run-sboot run-uds run-touch run-gpsdo run-uav run-inverter run-abs run-evse run-lift run-gen run-crossing
+.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer run-sboot run-uds run-touch run-gpsdo run-uav run-inverter run-abs run-evse run-lift run-gen run-crossing run-fire
 
 all:
 	@for project in $(PROJECTS); do $(MAKE) -C $$project all; done
@@ -114,3 +115,6 @@ run-gen:
 
 run-crossing:
 	@$(MAKE) -C projects/railway-grade-crossing-controller run
+
+run-fire:
+	@$(MAKE) -C projects/fire-panel-loop-controller run
