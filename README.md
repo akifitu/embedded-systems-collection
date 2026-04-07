@@ -56,6 +56,7 @@ problems that show up in production teams.
 - Spacecraft power autonomy through a satellite EPS load-shed controller
 - Combustion lockout logic through a gas burner flame safeguard controller
 - Renewable-energy shutdown logic through a wind turbine pitch safety controller
+- Respiratory safety logic through a ventilator breath cycle controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -94,6 +95,7 @@ flowchart LR
     Host --> SEPS[Satellite EPS Load Shed Controller]
     Host --> BURNER[Gas Burner Flame Safeguard Controller]
     Host --> WT[Wind Turbine Pitch Safety Controller]
+    Host --> VENT[Ventilator Breath Cycle Controller]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -126,6 +128,7 @@ flowchart LR
     SEPS --> SpacePower[Load Shedding, Survival Mode, and Eclipse Recovery]
     BURNER --> Combustion[Prepurge, Flame Prove, and Hard Lockout]
     WT --> Renewable[Feathering, Storm Hold, and Pitch Fault Lockout]
+    VENT --> Respiratory[Backup Breaths, Plateau Hold, and Patient Alarms]
 ```
 
 ## Projects
@@ -164,6 +167,7 @@ flowchart LR
 | `satellite-eps-load-shed-controller` | Eclipse load shedding, survival mode, recovery, and battery or bus protection | `make run-sat-eps` | [Architecture](projects/satellite-eps-load-shed-controller/docs/ARCHITECTURE.md) |
 | `gas-burner-flame-safeguard-controller` | Prepurge, ignition prove, postpurge, and airflow or interlock lockout handling | `make run-burner` | [Architecture](projects/gas-burner-flame-safeguard-controller/docs/ARCHITECTURE.md) |
 | `wind-turbine-pitch-safety-controller` | Startup release, generating trim, grid-loss feathering, and storm-hold or pitch fault handling | `make run-wind` | [Architecture](projects/wind-turbine-pitch-safety-controller/docs/ARCHITECTURE.md) |
+| `ventilator-breath-cycle-controller` | Patient-triggered inhale, backup breaths, plateau hold, and respiratory alarm handling | `make run-vent` | [Architecture](projects/ventilator-breath-cycle-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -525,6 +529,18 @@ phase=hydraulic_fault state=FAULT cmd=LATCH_FAULT fault=HYDRAULIC_LOW wind=11.0m
 phase=reset_ready state=PARKED cmd=RESET_TURBINE fault=NONE wind=7.0mps rpm=0 pitch=90deg gen=OFF brake=ON
 ```
 
+### Ventilator Breath Cycle Controller
+
+```text
+phase=standby state=STANDBY cmd=HOLD_STANDBY fault=NONE mode=SUPPORT blower=0 in_valve=CLOSED ex_valve=OPEN target=0 pressure=5 flow=12
+phase=patient_trigger state=INHALE cmd=DELIVER_INHALE fault=NONE mode=SUPPORT blower=68 in_valve=OPEN ex_valve=CLOSED target=18 pressure=12 flow=36
+phase=plateau state=HOLD cmd=HOLD_PLATEAU fault=NONE mode=SUPPORT blower=28 in_valve=CLOSED ex_valve=CLOSED target=18 pressure=18 flow=4
+phase=exhale state=EXHALE cmd=VENT_EXHALE fault=NONE mode=SUPPORT blower=0 in_valve=CLOSED ex_valve=OPEN target=5 pressure=8 flow=24
+phase=backup_breath state=BACKUP cmd=START_BACKUP fault=NONE mode=BACKUP blower=72 in_valve=OPEN ex_valve=CLOSED target=20 pressure=10 flow=32
+phase=disconnect_alarm state=ALARM cmd=LATCH_ALARM fault=DISCONNECT mode=SUPPORT blower=0 in_valve=CLOSED ex_valve=OPEN target=0 pressure=3 flow=0
+phase=reset_ready state=STANDBY cmd=RESET_VENT fault=NONE mode=SUPPORT blower=0 in_valve=CLOSED ex_valve=OPEN target=0 pressure=5 flow=10
+```
+
 ## Build
 
 Build and test everything:
@@ -569,6 +585,7 @@ make run-elevator
 make run-sat-eps
 make run-burner
 make run-wind
+make run-vent
 ```
 
 ## Why This Set Works on GitHub
@@ -611,6 +628,7 @@ make run-wind
 - Port the satellite EPS controller to a cubesat power board with battery telemetry ADCs, solar-regulator monitoring, switched payload rails, heater outputs, and watchdog-linked safe mode
 - Port the burner controller to an STM32, AVR, or burner-management board with blower relay, flame-rod input, airflow prove switch, gas valve outputs, and lockout annunciation
 - Port the wind turbine controller to an STM32, C2000, or industrial pitch board with rotor-speed capture, hydraulic-pressure sensing, grid contact feedback, brake relay, and blade encoder inputs
+- Port the ventilator controller to an STM32, NXP, or medical-control board with blower PWM drive, inspiratory and expiratory valve outputs, pressure and flow sensors, and gas-supply supervision
 
 ## References
 

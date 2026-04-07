@@ -32,6 +32,7 @@
 - Add a thirtieth spacecraft-power project with eclipse load shedding, survival mode, and recharge recovery
 - Add a thirty-first combustion-safety project with prepurge, ignition prove, and hard lockout handling
 - Add a thirty-second renewable-energy project with startup release, feather shutdown, and storm-hold pitch control
+- Add a thirty-third respiratory-support project with pressure-targeted breaths, apnea backup, and patient alarm handling
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 
