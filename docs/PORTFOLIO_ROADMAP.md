@@ -33,6 +33,7 @@
 - Add a thirty-first combustion-safety project with prepurge, ignition prove, and hard lockout handling
 - Add a thirty-second renewable-energy project with startup release, feather shutdown, and storm-hold pitch control
 - Add a thirty-third respiratory-support project with pressure-targeted breaths, apnea backup, and patient alarm handling
+- Add a thirty-fourth solar-power project with MPPT duty tracking, bulk or absorb or float charging, and charger fault lockout
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 

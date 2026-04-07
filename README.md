@@ -57,6 +57,7 @@ problems that show up in production teams.
 - Combustion lockout logic through a gas burner flame safeguard controller
 - Renewable-energy shutdown logic through a wind turbine pitch safety controller
 - Respiratory safety logic through a ventilator breath cycle controller
+- Solar power conversion through an MPPT charge controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -96,6 +97,7 @@ flowchart LR
     Host --> BURNER[Gas Burner Flame Safeguard Controller]
     Host --> WT[Wind Turbine Pitch Safety Controller]
     Host --> VENT[Ventilator Breath Cycle Controller]
+    Host --> SOLAR[Solar MPPT Charge Controller]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -129,6 +131,7 @@ flowchart LR
     BURNER --> Combustion[Prepurge, Flame Prove, and Hard Lockout]
     WT --> Renewable[Feathering, Storm Hold, and Pitch Fault Lockout]
     VENT --> Respiratory[Backup Breaths, Plateau Hold, and Patient Alarms]
+    SOLAR --> PowerConv[MPPT Duty Tracking, Absorb Float, and Thermal Fault Lockout]
 ```
 
 ## Projects
@@ -168,6 +171,7 @@ flowchart LR
 | `gas-burner-flame-safeguard-controller` | Prepurge, ignition prove, postpurge, and airflow or interlock lockout handling | `make run-burner` | [Architecture](projects/gas-burner-flame-safeguard-controller/docs/ARCHITECTURE.md) |
 | `wind-turbine-pitch-safety-controller` | Startup release, generating trim, grid-loss feathering, and storm-hold or pitch fault handling | `make run-wind` | [Architecture](projects/wind-turbine-pitch-safety-controller/docs/ARCHITECTURE.md) |
 | `ventilator-breath-cycle-controller` | Patient-triggered inhale, backup breaths, plateau hold, and respiratory alarm handling | `make run-vent` | [Architecture](projects/ventilator-breath-cycle-controller/docs/ARCHITECTURE.md) |
+| `solar-mppt-charge-controller` | Perturb-observe MPPT, bulk or absorb or float charging, and reverse or thermal fault handling | `make run-solar` | [Architecture](projects/solar-mppt-charge-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -541,6 +545,18 @@ phase=disconnect_alarm state=ALARM cmd=LATCH_ALARM fault=DISCONNECT mode=SUPPORT
 phase=reset_ready state=STANDBY cmd=RESET_VENT fault=NONE mode=SUPPORT blower=0 in_valve=CLOSED ex_valve=OPEN target=0 pressure=5 flow=10
 ```
 
+### Solar MPPT Charge Controller
+
+```text
+phase=dawn_idle state=IDLE cmd=OPEN_RELAY fault=NONE duty=0 relay=OPEN fan=OFF stage_target=0mV panel=14.0V 0.4A power=5.6W batt=11.8V temp=29C
+phase=bulk_track state=BULK cmd=SEEK_MPP fault=NONE duty=52 relay=CLOSED fan=OFF stage_target=14400mV panel=18.0V 4.2A power=75.6W batt=12.5V temp=34C
+phase=cloud_retrack state=BULK cmd=SEEK_MPP fault=NONE duty=50 relay=CLOSED fan=OFF stage_target=14400mV panel=16.8V 3.9A power=65.5W batt=13.2V temp=36C
+phase=absorb_hold state=ABSORB cmd=HOLD_ABSORB fault=NONE duty=48 relay=CLOSED fan=ON stage_target=14400mV panel=17.2V 3.1A power=53.3W batt=14.4V temp=44C
+phase=float_maintain state=FLOAT cmd=HOLD_FLOAT fault=NONE duty=28 relay=CLOSED fan=OFF stage_target=13600mV panel=17.8V 1.4A power=24.9W batt=13.7V temp=35C
+phase=thermal_fault state=FAULT cmd=LATCH_FAULT fault=OVER_TEMP duty=0 relay=OPEN fan=ON stage_target=0mV panel=17.0V 2.0A power=34.0W batt=13.9V temp=83C
+phase=reset_ready state=IDLE cmd=RESET_CHARGER fault=NONE duty=0 relay=OPEN fan=OFF stage_target=0mV panel=15.0V 0.8A power=12.0W batt=12.9V temp=31C
+```
+
 ## Build
 
 Build and test everything:
@@ -586,6 +602,7 @@ make run-sat-eps
 make run-burner
 make run-wind
 make run-vent
+make run-solar
 ```
 
 ## Why This Set Works on GitHub
@@ -629,6 +646,7 @@ make run-vent
 - Port the burner controller to an STM32, AVR, or burner-management board with blower relay, flame-rod input, airflow prove switch, gas valve outputs, and lockout annunciation
 - Port the wind turbine controller to an STM32, C2000, or industrial pitch board with rotor-speed capture, hydraulic-pressure sensing, grid contact feedback, brake relay, and blade encoder inputs
 - Port the ventilator controller to an STM32, NXP, or medical-control board with blower PWM drive, inspiratory and expiratory valve outputs, pressure and flow sensors, and gas-supply supervision
+- Port the solar MPPT controller to an STM32, AVR, or power board with synchronous buck PWM, panel current and voltage ADCs, battery feedback, NTC temperature sensing, and reverse-polarity protection
 
 ## References
 
