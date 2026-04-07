@@ -32,6 +32,7 @@ problems that show up in production teams.
 - Timing discipline through a GPSDO holdover controller
 - Autonomous recovery logic through a UAV failsafe controller
 - Grid-interconnect protection through an inverter guard controller
+- Chassis slip control through an ABS brake controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -59,6 +60,7 @@ flowchart LR
     Host --> GPSDO[GPSDO Holdover Controller]
     Host --> UAV[UAV Failsafe Controller]
     Host --> INV[Grid-Tie Inverter Guard]
+    Host --> ABS[Wheel-Slip ABS Controller]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -80,6 +82,7 @@ flowchart LR
     GPSDO --> Timing2[PPS Lock, Drift Model, and Holdover]
     UAV --> Flight[Geofence, Link Loss, RTL, and Landing]
     INV --> GridPower[Anti-Islanding, Sync, and Thermal Derating]
+    ABS --> Chassis[Slip Control, Valve Modulation, and Fault Detection]
 ```
 
 ## Projects
@@ -107,6 +110,7 @@ flowchart LR
 | `gpsdo-holdover-controller` | PPS lock, DAC trim discipline, temperature-based holdover | `make run-gpsdo` | [Architecture](projects/gpsdo-holdover-controller/docs/ARCHITECTURE.md) |
 | `uav-failsafe-controller` | Geofence monitoring, link-loss handling, RTL and emergency landing | `make run-uav` | [Architecture](projects/uav-failsafe-controller/docs/ARCHITECTURE.md) |
 | `grid-tie-inverter-guard` | Grid sync, anti-islanding trips, cooldown, thermal export derating | `make run-inverter` | [Architecture](projects/grid-tie-inverter-guard/docs/ARCHITECTURE.md) |
+| `wheel-slip-abs-controller` | Slip estimation, hydraulic valve modulation, wheel-sensor fault handling | `make run-abs` | [Architecture](projects/wheel-slip-abs-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -334,6 +338,17 @@ phase=cooldown state=COOLDOWN cmd=HOLD_OFF reason=COOLDOWN limit=0 sync=0 v=230 
 phase=relock state=EXPORT cmd=EXPORT_POWER reason=NONE limit=100 sync=5 v=230 f=50.000Hz relay=CLOSED quality=LOCKED
 ```
 
+### Wheel-Slip ABS Controller
+
+```text
+phase=cruise state=STANDBY pump=OFF brake=0 veh=88.0 slip=0/0/0/0 valves=HOLD/HOLD/HOLD/HOLD fault=NONE
+phase=threshold state=BRAKING pump=OFF brake=34 veh=72.0 slip=6/6/5/6 valves=APPLY/APPLY/APPLY/APPLY fault=NONE
+phase=split_mu state=ABS_ACTIVE pump=ON brake=76 veh=58.0 slip=24/15/10/10 valves=RELEASE/HOLD/APPLY/APPLY fault=NONE
+phase=peak_control state=ABS_ACTIVE pump=ON brake=82 veh=42.0 slip=18/16/15/15 valves=HOLD/HOLD/HOLD/HOLD fault=NONE
+phase=sensor_fault state=FAULT pump=OFF brake=68 veh=52.0 slip=0/0/0/0 valves=HOLD/HOLD/HOLD/HOLD fault=WHEEL_SENSOR
+phase=recovery state=STANDBY pump=OFF brake=0 veh=0.0 slip=0/0/0/0 valves=HOLD/HOLD/HOLD/HOLD fault=NONE
+```
+
 ## Build
 
 Build and test everything:
@@ -367,6 +382,7 @@ make run-touch
 make run-gpsdo
 make run-uav
 make run-inverter
+make run-abs
 ```
 
 ## Why This Set Works on GitHub
@@ -398,6 +414,7 @@ make run-inverter
 - Port the GPSDO controller to an STM32 or RP2040 with PPS capture, DAC trim output, and ovenized oscillator telemetry
 - Port the UAV failsafe controller to an STM32 or PX4-class autopilot with GPS, RC RSSI, barometer, and battery telemetry
 - Port the inverter guard to an STM32, dsPIC, or C2000 control board with PLL sensing, relay feedback, and gate-driver telemetry
+- Port the ABS controller to an automotive MCU with wheel-speed capture, valve drivers, pressure sensors, and pump current monitoring
 
 ## References
 
