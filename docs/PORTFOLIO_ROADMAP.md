@@ -28,6 +28,7 @@
 - Add a twenty-sixth railway-safety project with grade-crossing warning, gate sequencing, and lamp fault lockout
 - Add a twenty-seventh building-life-safety project with smoke verification, NAC silence, and supervised-loop trouble latching
 - Add a twenty-eighth medical-device project with infusion control, KVO fallback, and occlusion or air-in-line alarm handling
+- Add a twenty-ninth vertical-transport project with door obstruction recovery, nudge close, and lock-fault handling
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 

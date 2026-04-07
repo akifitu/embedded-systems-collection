@@ -39,6 +39,7 @@ problems that show up in production teams.
 - Railway warning control through a grade-crossing controller
 - Building life-safety logic through a fire panel loop controller
 - Medical-device dosing safety through an infusion pump controller
+- Vertical-transport protection through an elevator door safety controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -73,6 +74,7 @@ flowchart LR
     Host --> XING[Railway Grade Crossing Controller]
     Host --> FIRE[Fire Panel Loop Controller]
     Host --> INFUSE[Infusion Pump Safety Controller]
+    Host --> ELEV[Elevator Door Safety Controller]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -101,6 +103,7 @@ flowchart LR
     XING --> Rail[Approach Warning, Gate Motion, and Lamp Fault Lockout]
     FIRE --> LifeSafety[Smoke Verify, NAC Silence, and Trouble Latching]
     INFUSE --> MedDevice[Occlusion Alarms, KVO, and Therapy Reset]
+    ELEV --> BuildingTransport[Obstruction Recovery, Nudge Mode, and Lock Supervision]
 ```
 
 ## Projects
@@ -135,6 +138,7 @@ flowchart LR
 | `railway-grade-crossing-controller` | Approach warning, gate sequencing, lamp fault and gate-timeout lockout | `make run-crossing` | [Architecture](projects/railway-grade-crossing-controller/docs/ARCHITECTURE.md) |
 | `fire-panel-loop-controller` | Smoke verification, NAC silence, manual-pull alarm, and supervised-loop trouble latching | `make run-fire` | [Architecture](projects/fire-panel-loop-controller/docs/ARCHITECTURE.md) |
 | `infusion-pump-safety-controller` | Priming, infusion, KVO fallback, and occlusion or air-in-line alarm shutdown | `make run-infusion` | [Architecture](projects/infusion-pump-safety-controller/docs/ARCHITECTURE.md) |
+| `elevator-door-safety-controller` | Opening, obstruction retry, nudge close, and door-lock or motion-timeout fault handling | `make run-elevator` | [Architecture](projects/elevator-door-safety-controller/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -447,6 +451,19 @@ phase=occlusion_alarm state=ALARM cmd=STOP_AND_ALARM fault=OCCLUSION motor=OFF c
 phase=reset_ready state=IDLE cmd=RESET_PUMP fault=NONE motor=OFF clamp=CLOSED buzzer=OFF rate=0mLph delivered=0.0mL remaining=24.0mL reservoir=106.5mL pressure=20kPa
 ```
 
+### Elevator Door Safety Controller
+
+```text
+phase=idle_closed state=CLOSED cmd=HOLD_CLOSED fault=NONE door=CLOSED motor=STOP lock=LOCKED buzzer=OFF retry=0
+phase=arrival_opening state=OPENING cmd=DRIVE_OPEN fault=NONE door=MOVING motor=OPEN lock=UNLOCKED buzzer=OFF retry=0
+phase=boarding_open state=OPEN cmd=HOLD_OPEN fault=NONE door=OPEN motor=STOP lock=UNLOCKED buzzer=OFF retry=0
+phase=close_attempt state=CLOSING cmd=DRIVE_CLOSE fault=NONE door=MOVING motor=CLOSE lock=UNLOCKED buzzer=OFF retry=0
+phase=obstruction_retry state=OPENING cmd=DRIVE_OPEN fault=NONE door=MOVING motor=OPEN lock=UNLOCKED buzzer=OFF retry=1
+phase=nudge_close state=NUDGE cmd=NUDGE_CLOSE fault=NONE door=MOVING motor=CLOSE lock=UNLOCKED buzzer=ON retry=2
+phase=lock_fault state=FAULT cmd=LATCH_FAULT fault=LOCK_FAIL door=CLOSED motor=STOP lock=UNLOCKED buzzer=ON retry=0
+phase=reset_ready state=CLOSED cmd=RESET_DOOR fault=NONE door=CLOSED motor=STOP lock=LOCKED buzzer=OFF retry=0
+```
+
 ## Build
 
 Build and test everything:
@@ -487,6 +504,7 @@ make run-gen
 make run-crossing
 make run-fire
 make run-infusion
+make run-elevator
 ```
 
 ## Why This Set Works on GitHub
@@ -525,6 +543,7 @@ make run-infusion
 - Port the grade-crossing controller to a safety MCU or PLC with track-circuit inputs, flasher drivers, bell output, and barrier position sensing
 - Port the fire panel controller to an STM32 or panel MCU with supervised IDC/NAC loops, smoke detectors, pull stations, horn/strobe drivers, and annunciator feedback
 - Port the infusion pump controller to an STM32, MSP430, or NXP medical MCU with motor drive, pressure sensor ADC, air-in-line detector, door interlock, and clamp feedback
+- Port the elevator door controller to an STM32, AVR, or lift-controller MCU with inverter drive, safety-edge input, door-position sensors, lock contacts, and car-at-floor interlocks
 
 ## References
 
