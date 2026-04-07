@@ -20,6 +20,7 @@
 - Add an eighteenth HMI project with capacitive touch filtering and moisture rejection
 - Add a nineteenth timing-control project with GPSDO lock and holdover behavior
 - Add a twentieth autonomous-flight project with geofence, link-loss, and return-to-home failsafe logic
+- Add a twenty-first grid-interconnect project with anti-islanding protection and export derating
 - Add deterministic demos and unit tests
 - Keep dependencies near zero
 

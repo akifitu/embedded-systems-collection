@@ -18,9 +18,10 @@ PROJECTS := \
 	projects/uds-diagnostic-node \
 	projects/capacitive-touch-keypad-controller \
 	projects/gpsdo-holdover-controller \
-	projects/uav-failsafe-controller
+	projects/uav-failsafe-controller \
+	projects/grid-tie-inverter-guard
 
-.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer run-sboot run-uds run-touch run-gpsdo run-uav
+.PHONY: all test clean run-bms run-ota run-can run-motor run-journal run-power run-modbus run-attest run-rtos run-imu run-reflow run-pd run-stepper run-bldc run-sequencer run-sboot run-uds run-touch run-gpsdo run-uav run-inverter
 
 all:
 	@for project in $(PROJECTS); do $(MAKE) -C $$project all; done
@@ -90,3 +91,6 @@ run-gpsdo:
 
 run-uav:
 	@$(MAKE) -C projects/uav-failsafe-controller run
+
+run-inverter:
+	@$(MAKE) -C projects/grid-tie-inverter-guard run

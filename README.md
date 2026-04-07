@@ -31,6 +31,7 @@ problems that show up in production teams.
 - HMI sensing through a capacitive touch keypad controller
 - Timing discipline through a GPSDO holdover controller
 - Autonomous recovery logic through a UAV failsafe controller
+- Grid-interconnect protection through an inverter guard controller
 - Repeatability through `make test` and a GitHub Actions CI pipeline
 
 ## System Map
@@ -57,6 +58,7 @@ flowchart LR
     Host --> TOUCH[Capacitive Touch Keypad]
     Host --> GPSDO[GPSDO Holdover Controller]
     Host --> UAV[UAV Failsafe Controller]
+    Host --> INV[Grid-Tie Inverter Guard]
     BMS --> Safety[Fault Detection and SoC]
     OTA --> Reliability[CRC32, Trial Boot, Rollback]
     CAN --> VehicleBus[Periodic and Fault CAN Frames]
@@ -77,6 +79,7 @@ flowchart LR
     TOUCH --> HMI[Baseline Tracking, Debounce, and Moisture Guard]
     GPSDO --> Timing2[PPS Lock, Drift Model, and Holdover]
     UAV --> Flight[Geofence, Link Loss, RTL, and Landing]
+    INV --> GridPower[Anti-Islanding, Sync, and Thermal Derating]
 ```
 
 ## Projects
@@ -103,6 +106,7 @@ flowchart LR
 | `capacitive-touch-keypad-controller` | Baseline tracking, debounce, hold/combo events, moisture rejection | `make run-touch` | [Architecture](projects/capacitive-touch-keypad-controller/docs/ARCHITECTURE.md) |
 | `gpsdo-holdover-controller` | PPS lock, DAC trim discipline, temperature-based holdover | `make run-gpsdo` | [Architecture](projects/gpsdo-holdover-controller/docs/ARCHITECTURE.md) |
 | `uav-failsafe-controller` | Geofence monitoring, link-loss handling, RTL and emergency landing | `make run-uav` | [Architecture](projects/uav-failsafe-controller/docs/ARCHITECTURE.md) |
+| `grid-tie-inverter-guard` | Grid sync, anti-islanding trips, cooldown, thermal export derating | `make run-inverter` | [Architecture](projects/grid-tie-inverter-guard/docs/ARCHITECTURE.md) |
 
 ## Recorded Demo Snapshots
 
@@ -318,6 +322,18 @@ phase=critical_battery state=LAND cmd=DESCEND reason=CRITICAL_BATTERY battery=9 
 phase=touchdown state=DISARMED cmd=CUT_MOTORS reason=NONE battery=8 reserve=0 budget=14 link=0 fence=IN health=RED
 ```
 
+### Grid-Tie Inverter Guard
+
+```text
+phase=boot_wait state=WAIT_GRID cmd=OPEN_RELAY reason=NONE limit=0 sync=0 v=0 f=0.000Hz relay=OPEN quality=SEARCH
+phase=syncing state=SYNC cmd=TRACK_GRID reason=NONE limit=0 sync=3 v=230 f=50.000Hz relay=OPEN quality=LOCKING
+phase=export state=EXPORT cmd=EXPORT_POWER reason=NONE limit=100 sync=5 v=230 f=50.000Hz relay=CLOSED quality=LOCKED
+phase=thermal_derate state=EXPORT cmd=EXPORT_POWER reason=NONE limit=68 sync=5 v=230 f=50.000Hz relay=CLOSED quality=DERATED
+phase=sag_trip state=TRIP cmd=OPEN_RELAY reason=UNDERVOLTAGE limit=0 sync=0 v=187 f=50.000Hz relay=OPEN quality=FAULT
+phase=cooldown state=COOLDOWN cmd=HOLD_OFF reason=COOLDOWN limit=0 sync=0 v=230 f=50.000Hz relay=OPEN quality=RECOVERING
+phase=relock state=EXPORT cmd=EXPORT_POWER reason=NONE limit=100 sync=5 v=230 f=50.000Hz relay=CLOSED quality=LOCKED
+```
+
 ## Build
 
 Build and test everything:
@@ -350,6 +366,7 @@ make run-uds
 make run-touch
 make run-gpsdo
 make run-uav
+make run-inverter
 ```
 
 ## Why This Set Works on GitHub
@@ -380,6 +397,7 @@ make run-uav
 - Port the touch keypad to STM32 TSC, Microchip PTC, or ESP32 touch peripherals with real electrode layouts
 - Port the GPSDO controller to an STM32 or RP2040 with PPS capture, DAC trim output, and ovenized oscillator telemetry
 - Port the UAV failsafe controller to an STM32 or PX4-class autopilot with GPS, RC RSSI, barometer, and battery telemetry
+- Port the inverter guard to an STM32, dsPIC, or C2000 control board with PLL sensing, relay feedback, and gate-driver telemetry
 
 ## References
 
